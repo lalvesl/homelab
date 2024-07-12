@@ -1,0 +1,37 @@
+version: '3'
+
+services:
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    ports:
+      - 192.168.100.16:53:53/tcp
+      - 192.168.100.16:53:53/udp
+      # - 192.168.100.16:80:80/tcp
+      - 192.168.100.16:${PIHOLE_WEB_PORT}:${PIHOLE_WEB_PORT}
+    environment:
+      TZ: ${TZ}
+      WEB_PORT: ${PIHOLE_WEB_PORT}
+      WEBPASSWORD: ${PIHOLE_WEBPASSWORD}
+    volumes:
+      - '${PIHOLE_FILES}/etc-pihole:/etc/pihole'
+      - '${PIHOLE_FILES}/etc-dnsmasq.d:/etc/dnsmasq.d'
+    restart: unless-stopped
+    networks:
+      out_network:
+        ipv4_address: 192.168.100.16
+
+networks:
+  vpc_network:
+    driver: overlay 
+    name: vpc_network
+    internal: true
+
+  out_network:
+    driver: bridge
+    name: out_network
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.100.0/24
+          gateway: 192.168.100.1
